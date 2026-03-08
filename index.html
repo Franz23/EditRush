@@ -1,0 +1,1960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EditRush — The Video Editing Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&family=PT+Sans:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0a0f;
+  color: #fff;
+  font-family: 'PT Sans', sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+
+/* ---- START SCREEN ---- */
+#start-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  text-align: center;
+}
+
+.game-title {
+  font-size: 3.8rem;
+  font-weight: 900;
+  letter-spacing: -2px;
+  margin-bottom: 0.3rem;
+}
+
+.game-title .clip { color: #fff; }
+.game-title .ocalypse {
+  background: linear-gradient(135deg, #ff4444, #ff8844);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.game-tagline {
+  font-size: 1rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 2rem;
+}
+
+.game-subtitle {
+  font-size: 1.15rem;
+  color: #999;
+  margin-bottom: 2.5rem;
+  max-width: 480px;
+  line-height: 1.6;
+}
+
+.start-btn {
+  background: linear-gradient(135deg, #ff4444, #ff6644);
+  color: #fff;
+  border: none;
+  padding: 1rem 3rem;
+  border-radius: 12px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 1.5rem;
+}
+
+.start-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(255, 68, 68, 0.3);
+}
+
+.start-premise {
+  max-width: 420px;
+  color: #555;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+.footer-note {
+  color: #333;
+  font-size: 0.7rem;
+  margin-top: 3rem;
+}
+
+.footer-note a { color: #6722FF; text-decoration: none; }
+
+/* ---- GAME SCREEN ---- */
+#game-screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 0.75rem;
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 560px;
+  margin-bottom: 0.5rem;
+}
+
+.game-mode-badge {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  transition: all 0.4s ease;
+}
+
+.game-mode-badge.hard {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff6666;
+  border: 1px solid #ff4444;
+}
+
+.game-mode-badge.easy {
+  background: rgba(103, 34, 255, 0.15);
+  color: #a855f7;
+  border: 1px solid #6722FF;
+}
+
+.back-btn {
+  background: none;
+  border: 1px solid #333;
+  color: #555;
+  padding: 0.25rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  transition: all 0.2s;
+}
+
+.back-btn:hover { border-color: #888; color: #fff; }
+
+/* ---- GAME LAYOUT (3 columns: toast area | board | side panel) ---- */
+.game-layout {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+/* Left toast column */
+.toast-column {
+  width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+  padding-top: 2rem;
+  min-height: 300px;
+}
+
+.side-toast {
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.75rem;
+  white-space: pre-line;
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: all 0.3s ease;
+  max-width: 170px;
+  text-align: right;
+  pointer-events: none;
+}
+
+.side-toast.chaos {
+  background: rgba(255, 40, 40, 0.9);
+  color: #fff;
+}
+
+.side-toast.clear {
+  background: rgba(103, 34, 255, 0.9);
+  color: #fff;
+}
+
+.side-toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Canvas */
+canvas#game-canvas {
+  border: 2px solid #333;
+  border-radius: 12px;
+  background: #0d0d14;
+  transition: all 0.5s;
+}
+
+canvas#game-canvas.opus-border {
+  border-color: #6722FF;
+  box-shadow: 0 0 24px rgba(103, 34, 255, 0.15);
+}
+
+/* Right side panel */
+.side-panel {
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.panel-box {
+  background: #1a1a24;
+  border: 1px solid #2a2a34;
+  border-radius: 10px;
+  padding: 0.8rem;
+}
+
+.panel-box h4 {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #555;
+  margin-bottom: 0.3rem;
+}
+
+.stat-value {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  transition: color 0.4s;
+}
+
+#next-piece-canvas { display: block; margin: 0 auto; }
+
+#current-label {
+  font-size: 0.8rem;
+  color: #888;
+  text-align: center;
+  min-height: 1.2em;
+  transition: color 0.3s;
+  margin-top: 0.3rem;
+}
+
+/* ---- OPUSCLIP TOGGLE (appears after buying) ---- */
+#opus-toggle-box {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 100%;
+  height: 36px;
+  background: #1a1a24;
+  border: 2px solid #6722FF;
+  border-radius: 18px;
+  cursor: pointer;
+  transition: all 0.3s;
+  overflow: hidden;
+}
+
+.toggle-switch.off {
+  border-color: #ff4444;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #6722FF;
+  transition: all 0.3s;
+}
+
+.toggle-switch.off .toggle-knob {
+  left: calc(100% - 30px);
+  background: #ff4444;
+}
+
+.toggle-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 0.65rem;
+  letter-spacing: 0.5px;
+}
+
+.toggle-label.on-label {
+  left: 38px;
+  color: #a855f7;
+}
+
+.toggle-label.off-label {
+  right: 38px;
+  color: #ff6666;
+}
+
+.toggle-switch.off .on-label { opacity: 0.3; }
+.toggle-switch.off .off-label { opacity: 1; }
+.toggle-switch:not(.off) .on-label { opacity: 1; }
+.toggle-switch:not(.off) .off-label { opacity: 0.3; }
+
+#toggle-hint {
+  font-size: 0.65rem;
+  color: #555;
+  text-align: center;
+}
+
+/* ---- BUY OPUSCLIP BUTTON ---- */
+#buy-opus-box {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+#buy-opus-btn {
+  width: 100%;
+  padding: 0.65rem;
+  border: 2px solid #6722FF;
+  background: linear-gradient(135deg, #6722FF, #9333EA);
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+#buy-opus-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 20px rgba(103, 34, 255, 0.5);
+}
+
+/* Urgency levels for buy button */
+#buy-opus-btn.urgency-1 {
+  animation: pulse1 2s ease-in-out infinite;
+}
+#buy-opus-btn.urgency-2 {
+  animation: pulse2 1s ease-in-out infinite;
+  font-size: 0.95rem;
+  padding: 0.8rem;
+}
+#buy-opus-btn.urgency-3 {
+  animation: pulse3 0.5s ease-in-out infinite;
+  font-size: 1.05rem;
+  padding: 0.9rem;
+  border-width: 3px;
+  position: relative;
+  z-index: 10;
+}
+
+#buy-opus-btn.urgency-3::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6722FF, #ff4444, #6722FF, #ff4444);
+  background-size: 300% 300%;
+  animation: border-flash 0.8s linear infinite;
+  z-index: -1;
+  opacity: 0.8;
+}
+
+#buy-opus-btn.urgency-3::after {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border-radius: 16px;
+  background: radial-gradient(circle, rgba(103, 34, 255, 0.3) 0%, transparent 70%);
+  animation: glow-expand 0.5s ease-in-out infinite alternate;
+  z-index: -2;
+}
+
+@keyframes pulse1 {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(103, 34, 255, 0.3); }
+  50% { box-shadow: 0 0 14px 4px rgba(103, 34, 255, 0.25); }
+}
+
+@keyframes pulse2 {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(103, 34, 255, 0.5); transform: scale(1); }
+  50% { box-shadow: 0 0 24px 8px rgba(103, 34, 255, 0.4); transform: scale(1.05); }
+}
+
+@keyframes pulse3 {
+  0%, 100% { box-shadow: 0 0 8px 4px rgba(103, 34, 255, 0.6); transform: scale(1); }
+  50% { box-shadow: 0 0 36px 12px rgba(103, 34, 255, 0.5); transform: scale(1.08); }
+}
+
+@keyframes border-flash {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes glow-expand {
+  0% { opacity: 0.3; inset: -12px; }
+  100% { opacity: 0.6; inset: -20px; }
+}
+
+#buy-opus-hint {
+  font-size: 0.65rem;
+  color: #666;
+  text-align: center;
+  transition: color 0.3s;
+}
+
+/* Controls hint */
+.controls-hint {
+  color: #3a3a3a;
+  font-size: 0.65rem;
+  text-align: center;
+}
+
+.controls-hint div { padding: 0.05rem 0; }
+
+.controls-hint kbd {
+  background: #1a1a24;
+  border: 1px solid #2a2a2a;
+  border-radius: 3px;
+  padding: 0.02rem 0.25rem;
+  font-size: 0.6rem;
+  font-family: monospace;
+}
+
+/* ---- TRANSFORM TOAST (center, big) ---- */
+#transform-toast {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.8);
+  background: linear-gradient(135deg, rgba(103, 34, 255, 0.97), rgba(147, 51, 234, 0.97));
+  color: #fff;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  padding: 1.2rem 2.5rem;
+  border-radius: 14px;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s ease;
+  text-align: center;
+  white-space: pre-line;
+}
+
+#transform-toast.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* ---- END SCREEN ---- */
+#end-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 200;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem;
+}
+
+#end-screen h2 {
+  font-size: 2.6rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+}
+
+#end-screen .end-subtitle {
+  font-size: 1rem;
+  color: #aaa;
+  margin-bottom: 2rem;
+  max-width: 440px;
+  line-height: 1.6;
+}
+
+.end-stats {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.end-stat-val {
+  font-family: 'Poppins', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.end-stat-label {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.end-buttons {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.end-btn {
+  padding: 0.65rem 1.6rem;
+  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.end-btn.primary { background: #6722FF; color: #fff; }
+.end-btn.primary:hover { background: #7b3aff; transform: translateY(-2px); }
+.end-btn.secondary { background: transparent; color: #aaa; border: 1px solid #444; }
+.end-btn.secondary:hover { border-color: #888; color: #fff; }
+
+.end-cta {
+  display: block;
+  margin-top: 1.5rem;
+  color: #6722FF;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.end-cta:hover { color: #a855f7; }
+
+/* ---- CONFETTI ---- */
+.confetti-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 300;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  top: -20px;
+  animation: confetti-fall linear forwards;
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+@keyframes confetti-fall-spin {
+  0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+  25% { transform: translateY(28vh) rotate(360deg) scale(1.3); }
+  50% { transform: translateY(55vh) rotate(720deg) scale(0.8); }
+  100% { transform: translateY(110vh) rotate(1440deg) scale(0.3); opacity: 0; }
+}
+
+/* ---- MOBILE ---- */
+@media (max-width: 700px) {
+  .game-title { font-size: 2.4rem; }
+  .toast-column { display: none; }
+  .game-layout { flex-direction: column; align-items: center; }
+  .side-panel { width: 100%; max-width: 300px; flex-direction: row; flex-wrap: wrap; }
+  .panel-box { flex: 1; min-width: 75px; }
+  #end-screen h2 { font-size: 1.8rem; }
+}
+
+.touch-controls {
+  display: none;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .touch-controls { display: flex; }
+  .controls-hint { display: none; }
+}
+
+.touch-btn {
+  width: 50px; height: 50px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #1a1a24;
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  user-select: none; -webkit-user-select: none;
+}
+
+.touch-btn:active { background: #333; }
+</style>
+</head>
+<body>
+
+<!-- ---- START SCREEN ---- -->
+<div id="start-screen">
+  <h1 class="game-title"><span class="clip">Edit</span><span class="ocalypse">Rush</span></h1>
+  <p class="game-tagline">The Video Editing Survival Game</p>
+  <p class="game-subtitle">You're a video editor at a media company. Raw footage is piling up. Your competitor already posted. Ship clips or drown trying.</p>
+  <button class="start-btn" onclick="startGame()">Start Editing</button>
+  <p class="start-premise">"You have a 2-hour webinar, a live broadcast, and 4 raw interviews to clip. In Premiere Pro. By yourself. Good luck."</p>
+  <p class="footer-note">A totally unbiased game by <a href="https://opus.pro" target="_blank">OpusClip</a></p>
+  <p class="footer-note" style="margin-top:0.5rem;">This is an original marketing mini-game by OpusClip, Inc. Not affiliated with or endorsed by any other puzzle game company.</p>
+</div>
+
+<!-- ---- GAME SCREEN ---- -->
+<div id="game-screen">
+  <div class="game-header">
+    <span id="mode-badge" class="game-mode-badge hard">Premiere Pro</span>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="back-btn" id="mute-btn" onclick="toggleMute()">Sound: ON</button>
+      <button class="back-btn" onclick="backToMenu()">Quit</button>
+    </div>
+  </div>
+
+  <div class="game-layout">
+    <!-- Left: toast messages -->
+    <div class="toast-column" id="toast-column"></div>
+
+    <!-- Center: board -->
+    <div>
+      <canvas id="game-canvas" width="288" height="576"></canvas>
+    </div>
+
+    <!-- Right: stats + controls -->
+    <div class="side-panel">
+      <div class="panel-box">
+        <h4>Clips Shipped</h4>
+        <div id="lines-display" class="stat-value" style="color:#ff6666;">0</div>
+      </div>
+      <div class="panel-box">
+        <h4>Score</h4>
+        <div id="score-display" class="stat-value" style="color:#ff6666;">0</div>
+      </div>
+      <div class="panel-box">
+        <h4>Next Up</h4>
+        <canvas id="next-piece-canvas" width="120" height="90"></canvas>
+        <div id="current-label"></div>
+      </div>
+
+      <!-- Buy OpusClip (hidden initially) -->
+      <div id="buy-opus-box">
+        <button id="buy-opus-btn" onclick="buyOpusClip()">Get OpusClip</button>
+        <div id="buy-opus-hint">There has to be a better way...</div>
+      </div>
+
+      <!-- OpusClip toggle (hidden until purchased) -->
+      <div id="opus-toggle-box">
+        <div class="toggle-switch" id="opus-toggle" onclick="toggleOpus()">
+          <div class="toggle-knob"></div>
+          <span class="toggle-label on-label">OPUS</span>
+          <span class="toggle-label off-label">OFF</span>
+        </div>
+        <div id="toggle-hint">Toggle OpusClip on/off</div>
+      </div>
+
+      <div class="controls-hint">
+        <div><kbd>&larr;</kbd><kbd>&rarr;</kbd> Move <kbd>&uarr;</kbd> Rotate</div>
+        <div><kbd>&darr;</kbd> Drop <kbd>Space</kbd> Slam</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="touch-controls">
+    <button class="touch-btn" ontouchstart="handleTouch('left')" onclick="handleTouch('left')">&#9664;</button>
+    <button class="touch-btn" ontouchstart="handleTouch('rotate')" onclick="handleTouch('rotate')">&#8635;</button>
+    <button class="touch-btn" ontouchstart="handleTouch('down')" onclick="handleTouch('down')">&#9660;</button>
+    <button class="touch-btn" ontouchstart="handleTouch('right')" onclick="handleTouch('right')">&#9654;</button>
+    <button class="touch-btn" ontouchstart="handleTouch('drop')" onclick="handleTouch('drop')">&#9196;</button>
+  </div>
+</div>
+
+<!-- Transform toast (center screen, big moment) -->
+<div id="transform-toast"></div>
+
+<!-- ---- END SCREEN ---- -->
+<div id="end-screen">
+  <h2 id="end-title"></h2>
+  <p id="end-subtitle" class="end-subtitle"></p>
+  <div class="end-stats">
+    <div>
+      <div id="end-score" class="end-stat-val">0</div>
+      <div class="end-stat-label">Score</div>
+    </div>
+    <div>
+      <div id="end-lines" class="end-stat-val">0</div>
+      <div class="end-stat-label">Clips</div>
+    </div>
+    <div>
+      <div id="end-time" class="end-stat-val">0:00</div>
+      <div class="end-stat-label">Time</div>
+    </div>
+  </div>
+  <div id="end-buttons" class="end-buttons"></div>
+</div>
+
+<div id="confetti-container" class="confetti-container"></div>
+
+<script>
+// ============================================================
+// EDITRUSH
+// ============================================================
+
+// ============================================================
+// 8-BIT MUSIC ENGINE (Web Audio API — softer chiptune)
+// ============================================================
+
+var audioCtx = null;
+var musicGain = null;
+var musicPlaying = false;
+var currentNoteTimeout = null;
+var musicBPM = 130;
+var musicStep = 0;
+var isMuted = false;
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  musicGain = audioCtx.createGain();
+  musicGain.gain.value = 0.10;
+  musicGain.connect(audioCtx.destination);
+}
+
+// Soft chiptune note with envelope
+function playNote(freq, duration, startTime, type, gainVal) {
+  if (!audioCtx) return;
+  var osc = audioCtx.createOscillator();
+  var noteGain = audioCtx.createGain();
+
+  osc.type = type || 'triangle'; // triangle is softer than square
+  osc.frequency.value = freq;
+
+  // Soft attack, smooth decay
+  var vol = gainVal || 0.15;
+  noteGain.gain.setValueAtTime(0.001, startTime);
+  noteGain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
+  noteGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.9);
+
+  osc.connect(noteGain);
+  noteGain.connect(musicGain);
+  osc.start(startTime);
+  osc.stop(startTime + duration);
+}
+
+// Soft hihat
+function playNoise(startTime, duration) {
+  if (!audioCtx) return;
+  var bufferSize = Math.floor(audioCtx.sampleRate * duration);
+  var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  var data = buffer.getChannelData(0);
+  for (var i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+  var noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+
+  var noiseGain = audioCtx.createGain();
+  noiseGain.gain.setValueAtTime(0.04, startTime);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration * 0.6);
+
+  var filter = audioCtx.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.value = 9000;
+
+  noise.connect(filter);
+  filter.connect(noiseGain);
+  noiseGain.connect(musicGain);
+  noise.start(startTime);
+  noise.stop(startTime + duration);
+}
+
+// ---- HARD MODE: D minor, moody, rhythmic ----
+// Notes: D E F G A Bb C (natural minor)
+var HARD_MELODY = [
+  // Phrase 1: descending tension
+  587, 0, 523, 494, 440, 0, 392, 0,
+  349, 0, 392, 440, 494, 0, 440, 0,
+  // Phrase 2: climbing anxiety
+  294, 330, 349, 0, 392, 440, 0, 494,
+  440, 0, 392, 349, 330, 0, 294, 0,
+];
+
+var HARD_BASS = [
+  147, 0, 147, 0, 175, 0, 175, 0,
+  131, 0, 131, 0, 147, 0, 165, 0,
+  147, 0, 147, 0, 175, 0, 175, 0,
+  131, 0, 147, 0, 165, 0, 147, 0,
+];
+
+// ---- OPUS MODE: G major, bright, bouncy ----
+// Notes: G A B C D E F#
+var OPUS_MELODY = [
+  392, 0, 440, 494, 523, 0, 587, 0,
+  659, 0, 587, 523, 494, 0, 523, 0,
+  587, 0, 659, 0, 784, 659, 587, 0,
+  523, 494, 523, 0, 392, 0, 440, 0,
+];
+
+var OPUS_BASS = [
+  196, 0, 196, 0, 220, 0, 220, 0,
+  247, 0, 247, 0, 262, 0, 247, 0,
+  196, 0, 196, 0, 220, 0, 220, 0,
+  262, 0, 247, 0, 196, 0, 196, 0,
+];
+
+function scheduleMusicChunk() {
+  if (!musicPlaying || !audioCtx) return;
+
+  var melody = opusMode ? OPUS_MELODY : HARD_MELODY;
+  var bass = opusMode ? OPUS_BASS : HARD_BASS;
+  var bpm = opusMode ? 145 : musicBPM;
+  var beatDur = 60 / bpm / 2;
+  var now = audioCtx.currentTime + 0.05;
+
+  for (var i = 0; i < 8; i++) {
+    var idx = (musicStep + i) % melody.length;
+    var t = now + i * beatDur;
+
+    // Melody — triangle wave (soft 8-bit feel)
+    if (melody[idx] > 0) {
+      playNote(melody[idx], beatDur * 0.7, t, 'triangle', 0.15);
+    }
+
+    // Bass — sine wave (warm, round)
+    if (bass[idx] > 0) {
+      playNote(bass[idx], beatDur * 0.8, t, 'sine', 0.18);
+    }
+
+    // Light percussion
+    if ((musicStep + i) % 8 === 0) {
+      playNote(50, beatDur * 0.4, t, 'sine', 0.2); // soft kick
+    }
+    if ((musicStep + i) % 4 === 2) {
+      playNoise(t, beatDur * 0.2); // soft hihat
+    }
+  }
+
+  musicStep += 8;
+  var chunkDuration = 8 * beatDur * 1000;
+  currentNoteTimeout = setTimeout(scheduleMusicChunk, chunkDuration * 0.85);
+}
+
+function startMusic() {
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  musicStep = 0;
+  musicPlaying = true;
+  musicBPM = 130;
+  scheduleMusicChunk();
+}
+
+function stopMusic() {
+  musicPlaying = false;
+  if (currentNoteTimeout) { clearTimeout(currentNoteTimeout); currentNoteTimeout = null; }
+}
+
+function switchMusicMode() {
+  if (currentNoteTimeout) clearTimeout(currentNoteTimeout);
+  musicStep = 0;
+  if (musicPlaying) scheduleMusicChunk();
+}
+
+function increaseMusicTension() {
+  musicBPM = Math.min(180, musicBPM + 4);
+}
+
+// OpusClip drop speed: slow when board is full, fast when nearly clear
+function updateOpusSpeed() {
+  var fill = getBoardFill();
+  if (fill > 0.5) {
+    dropInterval = 350; // lots of garbage — give player time but keep it moving
+  } else if (fill > 0.3) {
+    dropInterval = 250; // clearing nicely
+  } else if (fill > 0.15) {
+    dropInterval = 180; // almost there, fast
+  } else {
+    dropInterval = 120; // board nearly clear — rapid and satisfying
+  }
+}
+
+function toggleMute() {
+  isMuted = !isMuted;
+  if (musicGain) musicGain.gain.value = isMuted ? 0 : 0.10;
+  document.getElementById('mute-btn').textContent = isMuted ? 'Sound: OFF' : 'Sound: ON';
+}
+
+var COLS = 8, ROWS = 16, BLOCK = 36;
+
+var canvas, ctx, nextCanvas, nextCtx;
+var board, currentPiece, nextPiece;
+var score = 0, linesCleared = 0, isGameOver = false;
+var gameLoop = null, startTime = 0;
+var dropInterval = 500, lastDrop = 0;
+var chaosTimer = null, buyBtnTimer = null, urgencyInterval = null;
+var opusMode = false;
+var opusPurchased = false; // once true, toggle is available
+var opusLinesTarget = 0, opusLinesStart = 0;
+var opusPieceCount = 0; // tracks pieces since OpusClip activated
+var chaosCount = 0;
+var toastQueue = [];
+
+// ---- HARD PIECES ----
+// Mix of annoying shapes (60%) and basic ones (40%) so it's frustrating but playable
+var HARD_JANKY = [
+  { shape: [[0,1,1],[1,1,0],[0,1,0]], color: '#ff4444', label: 'Raw Footage' },
+  { shape: [[1,0],[1,0],[1,0],[1,1]], color: '#ff6644', label: '2hr Webinar' },
+  { shape: [[1,1,1],[0,1,0],[0,1,0]], color: '#ff8844', label: 'Uncut Interview' },
+  { shape: [[1,0,1],[1,1,1]], color: '#ffaa44', label: 'Podcast Raw' },
+  { shape: [[1,0,0],[1,1,0],[0,1,1]], color: '#ff5566', label: 'Live Broadcast' },
+  { shape: [[0,1,0],[1,1,1],[0,1,0]], color: '#ff2244', label: 'Multi-Cam Feed' },
+  { shape: [[1,0,0],[0,1,0],[0,0,1]], color: '#dd4455', label: 'Corrupted File' },
+  { shape: [[1,0],[0,1],[1,0],[0,1]], color: '#cc4433', label: 'Jump Cut Mess' },
+];
+var HARD_BASIC = [
+  { shape: [[1,1],[1,1]], color: '#ff6655', label: 'Zoom Recording' },
+  { shape: [[1,1,1]], color: '#ff4433', label: 'Event VOD' },
+  { shape: [[1,1],[0,1]], color: '#ff3377', label: '4K B-Roll' },
+  { shape: [[1,1],[1,0]], color: '#cc3333', label: 'Screen Grab' },
+  { shape: [[1],[1],[1]], color: '#dd5566', label: 'Vertical Raw' },
+];
+
+// ---- OPUS PIECES (normal sizes — smart fill handles the magic) ----
+var OPUS_PIECES = [
+  { shape: [[1]], color: '#6722FF', label: 'Short Clip' },
+  { shape: [[1]], color: '#7C3AED', label: '15s Clip' },
+  { shape: [[1,1]], color: '#8B5CF6', label: 'Auto-Clip' },
+  { shape: [[1,1]], color: '#9333EA', label: 'Highlight' },
+  { shape: [[1,1,1]], color: '#A855F7', label: '30s Short' },
+  { shape: [[1,1,1]], color: '#6D28D9', label: 'Reel' },
+  { shape: [[1,1,1,1]], color: '#6722FF', label: '60s Short' },
+  { shape: [[1,1,1,1]], color: '#7C3AED', label: 'Midform Clip' },
+];
+
+// Smart piece generator: reads the board and creates a piece that fits the gaps
+function smartOpusPiece() {
+  var opusColors = ['#6722FF', '#7C3AED', '#8B5CF6', '#9333EA', '#A855F7', '#6D28D9'];
+  var opusLabels = ['Auto-Clip', 'AI Short', 'Highlight', 'Reel', 'TikTok', 'IG Story', 'YT Short', 'Branded Clip'];
+
+  // Find the lowest row that has at least one gap and one filled cell
+  for (var r = ROWS - 1; r >= 0; r--) {
+    var gaps = [];
+    var filledCount = 0;
+    for (var c = 0; c < COLS; c++) {
+      if (!board[r][c]) {
+        gaps.push(c);
+      } else {
+        filledCount++;
+      }
+    }
+
+    // Target rows that have some fill (need 1-6 blocks to complete)
+    if (gaps.length >= 1 && gaps.length <= 6 && filledCount >= 2) {
+      // Find a contiguous run of gaps
+      var bestStart = gaps[0];
+      var bestLen = 1;
+      var curStart = gaps[0];
+      var curLen = 1;
+
+      for (var i = 1; i < gaps.length; i++) {
+        if (gaps[i] === gaps[i - 1] + 1) {
+          curLen++;
+          if (curLen > bestLen) {
+            bestLen = curLen;
+            bestStart = curStart;
+          }
+        } else {
+          curStart = gaps[i];
+          curLen = 1;
+        }
+      }
+
+      // Create a piece that fills this contiguous gap
+      var width = Math.min(bestLen, 4); // cap at 4 wide
+      var shape = [];
+      var row = [];
+      for (var w = 0; w < width; w++) row.push(1);
+      shape.push(row);
+
+      return {
+        shape: shape,
+        color: opusColors[Math.floor(Math.random() * opusColors.length)],
+        label: opusLabels[Math.floor(Math.random() * opusLabels.length)],
+        x: bestStart,
+        y: 0,
+      };
+    }
+  }
+
+  // Fallback: random opus piece
+  var p = OPUS_PIECES[Math.floor(Math.random() * OPUS_PIECES.length)];
+  var shapeCopy = [];
+  for (var i = 0; i < p.shape.length; i++) shapeCopy.push(p.shape[i].slice());
+  return {
+    shape: shapeCopy,
+    color: p.color,
+    label: p.label,
+    x: Math.floor((COLS - p.shape[0].length) / 2),
+    y: 0,
+  };
+}
+
+// ---- CHAOS EVENTS ----
+var CHAOS_EVENTS = [
+  { msg: "REVISION REQUESTED\nProducer wants different framing", action: 'garbage' },
+  { msg: "APPROVAL PENDING\nSenior editor is in a meeting", action: 'speed' },
+  { msg: "WRONG ASPECT RATIO\nSocial needs 9:16, not 16:9", action: 'garbage' },
+  { msg: "PREMIERE CRASHED\nRe-rendering from scratch...", action: 'garbage2' },
+  { msg: "BREAKING NEWS\n3 more raw clips just dropped", action: 'garbage2' },
+  { msg: "CAPTION MISMATCH\nCopywriter used the wrong quote", action: 'garbage' },
+  { msg: "COMPETITOR POSTED FIRST\nThey beat you by 20 min", action: 'speed' },
+  { msg: "FOOTAGE CORRUPTED\nCamera 2 has no audio", action: 'garbage' },
+  { msg: "RENDER: 47 MINUTES\nYou wait. They don't.", action: 'speed' },
+  { msg: "\"WHERE ARE THE CLIPS?\"\n- Social Team, 5 min ago", action: 'garbage' },
+];
+
+var OPUS_CHAOS_EVENTS = [
+  { msg: "REVISION REQUESTED\nAI re-clipped in 2 seconds", action: 'none' },
+  { msg: "BREAKING NEWS\nOpusClip already clipping it", action: 'garbage-light' },
+  { msg: "COMPETITOR POSTED\nYou posted 10 min before them", action: 'none' },
+  { msg: "SOCIAL TEAM ASKS\n\"How are clips ready so fast?\"", action: 'none' },
+];
+
+var CLEAR_MESSAGES = [
+  "AI clipped that instantly",
+  "Auto-captioned + branded",
+  "Scheduled to 4 platforms",
+  "10x faster than Premiere",
+  "Your competitor is still rendering",
+  "One upload. Done.",
+  "That clip scored 9.2",
+  "Already posted to LinkedIn",
+  "TikTok + Reels + Shorts. Done.",
+  "Clips shipped while they edit",
+];
+
+var BUY_HINTS = [
+  "There has to be a better way...",
+  "Your competitor already posted.",
+  "47 more clips to go...",
+  "The social team is asking...",
+  "Maybe AI could help?",
+  "Seriously, just click it.",
+];
+
+// ============================================================
+// BOARD + PIECES
+// ============================================================
+
+function createBoard() {
+  var b = [];
+  for (var i = 0; i < ROWS; i++) {
+    var row = [];
+    for (var j = 0; j < COLS; j++) row.push(0);
+    b.push(row);
+  }
+  return b;
+}
+
+function randomPiece() {
+  if (opusMode) {
+    opusPieceCount++;
+    var fill = getBoardFill();
+    // Smart fill kicks in early — board <40% full, start giving perfect pieces
+    if (fill < 0.40) {
+      return smartOpusPiece();
+    }
+    // First 6 pieces after activating: single blocks only (instant relief)
+    // Then gradually introduce wider pieces
+    var maxWidth;
+    if (opusPieceCount <= 6) {
+      maxWidth = 1;
+    } else if (opusPieceCount <= 10) {
+      maxWidth = 2;
+    } else {
+      maxWidth = 3;
+    }
+    var candidates = [];
+    for (var i = 0; i < OPUS_PIECES.length; i++) {
+      if (OPUS_PIECES[i].shape[0].length <= maxWidth) candidates.push(OPUS_PIECES[i]);
+    }
+    var p = candidates[Math.floor(Math.random() * candidates.length)];
+    var shapeCopy = [];
+    for (var i = 0; i < p.shape.length; i++) shapeCopy.push(p.shape[i].slice());
+    return {
+      shape: shapeCopy,
+      color: p.color,
+      label: p.label,
+      x: Math.floor((COLS - p.shape[0].length) / 2),
+      y: 0,
+    };
+  }
+  // 60% janky, 40% basic — frustrating but not impossible
+  var pieces = Math.random() < 0.6 ? HARD_JANKY : HARD_BASIC;
+  var p = pieces[Math.floor(Math.random() * pieces.length)];
+  var shapeCopy = [];
+  for (var i = 0; i < p.shape.length; i++) shapeCopy.push(p.shape[i].slice());
+  return {
+    shape: shapeCopy,
+    color: p.color,
+    label: p.label,
+    x: Math.floor((COLS - p.shape[0].length) / 2),
+    y: 0,
+  };
+}
+
+function rotate(shape) {
+  var rows = shape.length, cols = shape[0].length;
+  var rotated = [];
+  for (var c = 0; c < cols; c++) {
+    var newRow = [];
+    for (var r = 0; r < rows; r++) newRow.push(0);
+    rotated.push(newRow);
+  }
+  for (var r = 0; r < rows; r++)
+    for (var c = 0; c < cols; c++)
+      rotated[c][rows - 1 - r] = shape[r][c];
+  return rotated;
+}
+
+function valid(shape, px, py) {
+  for (var r = 0; r < shape.length; r++) {
+    for (var c = 0; c < shape[r].length; c++) {
+      if (!shape[r][c]) continue;
+      var nx = px + c, ny = py + r;
+      if (nx < 0 || nx >= COLS || ny >= ROWS) return false;
+      if (ny >= 0 && board[ny][nx]) return false;
+    }
+  }
+  return true;
+}
+
+function merge(piece) {
+  for (var r = 0; r < piece.shape.length; r++)
+    for (var c = 0; c < piece.shape[r].length; c++) {
+      if (!piece.shape[r][c]) continue;
+      var ny = piece.y + r;
+      if (ny < 0) continue;
+      board[ny][piece.x + c] = piece.color;
+    }
+}
+
+function clearFullLines() {
+  var cleared = 0;
+  for (var r = ROWS - 1; r >= 0; r--) {
+    var full = true;
+    for (var c = 0; c < COLS; c++) { if (!board[r][c]) { full = false; break; } }
+    if (full) {
+      board.splice(r, 1);
+      var emptyRow = [];
+      for (var c2 = 0; c2 < COLS; c2++) emptyRow.push(0);
+      board.unshift(emptyRow);
+      cleared++;
+      r++;
+    }
+  }
+  return cleared;
+}
+
+function addGarbageRows(count) {
+  for (var i = 0; i < count; i++) {
+    var row = [];
+    var gap = Math.floor(Math.random() * COLS);
+    for (var c = 0; c < COLS; c++) row.push(c === gap ? 0 : '#332222');
+    board.push(row);
+    board.shift();
+  }
+}
+
+// Board fill percentage (for urgency)
+function getBoardFill() {
+  var filled = 0;
+  for (var r = 0; r < ROWS; r++)
+    for (var c = 0; c < COLS; c++)
+      if (board[r][c]) filled++;
+  return filled / (ROWS * COLS);
+}
+
+// ============================================================
+// SIDE TOASTS
+// ============================================================
+
+var toastIdCounter = 0;
+
+function showSideToast(msg, type, duration) {
+  var col = document.getElementById('toast-column');
+  var toast = document.createElement('div');
+  toast.className = 'side-toast ' + type;
+  toast.textContent = msg;
+  var id = 'toast-' + (toastIdCounter++);
+  toast.id = id;
+
+  // Keep max 3 toasts
+  while (col.children.length >= 3) {
+    col.removeChild(col.firstChild);
+  }
+
+  col.appendChild(toast);
+
+  // Trigger animation
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      toast.classList.add('show');
+    });
+  });
+
+  setTimeout(function() {
+    toast.classList.remove('show');
+    setTimeout(function() {
+      var el = document.getElementById(id);
+      if (el && el.parentNode) el.parentNode.removeChild(el);
+    }, 300);
+  }, duration);
+}
+
+function showTransformToast(msg, duration) {
+  var toast = document.getElementById('transform-toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(function() { toast.classList.remove('show'); }, duration);
+}
+
+// ============================================================
+// CHAOS SYSTEM
+// ============================================================
+
+function scheduleNextChaos() {
+  if (isGameOver) return;
+
+  var delay;
+  if (opusMode) {
+    // Rare chaos in opus mode (15-25 seconds)
+    delay = 15000 + Math.random() * 10000;
+  } else {
+    // Ramps up but stays survivable — pressure, not death
+    delay = Math.max(5000, 10000 - chaosCount * 600) + Math.random() * 3000;
+  }
+  chaosTimer = setTimeout(triggerChaos, delay);
+}
+
+function triggerChaos() {
+  if (isGameOver) return;
+  chaosCount++;
+
+  if (opusMode) {
+    // Gentle chaos in opus mode
+    var event = OPUS_CHAOS_EVENTS[Math.floor(Math.random() * OPUS_CHAOS_EVENTS.length)];
+    showSideToast(event.msg, 'clear', 2500);
+    if (event.action === 'garbage-light') {
+      addGarbageRows(1);
+    }
+  } else {
+    var event = CHAOS_EVENTS[Math.floor(Math.random() * CHAOS_EVENTS.length)];
+    showSideToast(event.msg, 'chaos', 2500);
+
+    switch (event.action) {
+      case 'garbage': addGarbageRows(1); break;
+      case 'garbage2': addGarbageRows(2); break;
+      case 'speed': dropInterval = Math.max(180, dropInterval - 40); break;
+    }
+
+    increaseMusicTension();
+
+    // Update buy hint
+    var hintEl = document.getElementById('buy-opus-hint');
+    if (hintEl) {
+      hintEl.textContent = BUY_HINTS[Math.min(chaosCount - 1, BUY_HINTS.length - 1)];
+    }
+  }
+
+  scheduleNextChaos();
+}
+
+// ============================================================
+// BUY BUTTON URGENCY
+// ============================================================
+
+function updateBuyUrgency() {
+  if (opusPurchased || isGameOver) return;
+  var btn = document.getElementById('buy-opus-btn');
+  var box = document.getElementById('buy-opus-box');
+  if (!btn || box.style.display === 'none') return;
+
+  var fill = getBoardFill();
+  var hint = document.getElementById('buy-opus-hint');
+  btn.classList.remove('urgency-1', 'urgency-2', 'urgency-3');
+
+  if (fill > 0.55) {
+    btn.classList.add('urgency-3');
+    btn.textContent = 'GET OPUSCLIP NOW';
+    hint.textContent = 'You are about to lose.';
+    hint.style.color = '#ff6666';
+  } else if (fill > 0.35) {
+    btn.classList.add('urgency-2');
+    btn.textContent = 'Get OpusClip';
+    hint.textContent = BUY_HINTS[Math.min(chaosCount, BUY_HINTS.length - 1)];
+    hint.style.color = '#999';
+  } else {
+    btn.classList.add('urgency-1');
+    btn.textContent = 'Get OpusClip';
+    hint.style.color = '#666';
+  }
+}
+
+function showBuyButton() {
+  if (opusPurchased) return;
+  document.getElementById('buy-opus-box').style.display = 'flex';
+  urgencyInterval = setInterval(updateBuyUrgency, 500);
+}
+
+// ============================================================
+// BUY / TOGGLE OPUSCLIP
+// ============================================================
+
+function buyOpusClip() {
+  opusMode = true;
+  opusPurchased = true;
+  opusPieceCount = 0;
+
+  if (chaosTimer) clearTimeout(chaosTimer);
+  if (urgencyInterval) clearInterval(urgencyInterval);
+
+  switchMusicMode();
+  showTransformToast('OpusClip activated.\nEasy mode: ON', 2500);
+
+  // Transform UI
+  var badge = document.getElementById('mode-badge');
+  badge.textContent = 'OpusClip';
+  badge.className = 'game-mode-badge easy';
+  document.getElementById('game-canvas').classList.add('opus-border');
+  document.getElementById('score-display').style.color = '#a855f7';
+  document.getElementById('lines-display').style.color = '#a855f7';
+
+  // Hide buy, show toggle
+  document.getElementById('buy-opus-box').style.display = 'none';
+  document.getElementById('opus-toggle-box').style.display = 'flex';
+
+  // Win target
+  opusLinesStart = linesCleared;
+  opusLinesTarget = linesCleared + 10;
+
+  // Dynamic speed — starts slow when board is full, speeds up as it clears
+  updateOpusSpeed();
+
+  // New pieces
+  currentPiece = randomPiece();
+  nextPiece = randomPiece();
+
+  // Resume chaos (gentle)
+  scheduleNextChaos();
+}
+
+function toggleOpus() {
+  var toggle = document.getElementById('opus-toggle');
+  var badge = document.getElementById('mode-badge');
+  var canv = document.getElementById('game-canvas');
+
+  if (opusMode) {
+    // Turn OFF opus
+    opusMode = false;
+    toggle.classList.add('off');
+    badge.textContent = 'Premiere Pro';
+    badge.className = 'game-mode-badge hard';
+    canv.classList.remove('opus-border');
+    document.getElementById('score-display').style.color = '#ff6666';
+    document.getElementById('lines-display').style.color = '#ff6666';
+    document.getElementById('toggle-hint').textContent = 'Feel the difference?';
+
+    dropInterval = Math.max(150, 400 - chaosCount * 30);
+
+    // Restart heavy chaos
+    if (chaosTimer) clearTimeout(chaosTimer);
+    scheduleNextChaos();
+    switchMusicMode();
+
+    currentPiece = randomPiece();
+    nextPiece = randomPiece();
+  } else {
+    // Turn ON opus
+    opusMode = true;
+    opusPieceCount = 0;
+    toggle.classList.remove('off');
+    badge.textContent = 'OpusClip';
+    badge.className = 'game-mode-badge easy';
+    canv.classList.add('opus-border');
+    document.getElementById('score-display').style.color = '#a855f7';
+    document.getElementById('lines-display').style.color = '#a855f7';
+    document.getElementById('toggle-hint').textContent = 'Toggle OpusClip on/off';
+
+    dropInterval = 160;
+
+    if (chaosTimer) clearTimeout(chaosTimer);
+    scheduleNextChaos();
+    switchMusicMode();
+
+    currentPiece = randomPiece();
+    nextPiece = randomPiece();
+  }
+}
+
+// ============================================================
+// WIN / LOSS
+// ============================================================
+
+function checkWin() {
+  if (!opusMode || !opusPurchased) return false;
+  // Win when the board is completely clear
+  for (var r = 0; r < ROWS; r++)
+    for (var c = 0; c < COLS; c++)
+      if (board[r][c]) return false;
+  return true;
+}
+
+function triggerWin() {
+  isGameOver = true;
+  stopMusic();
+  if (gameLoop) cancelAnimationFrame(gameLoop);
+  if (chaosTimer) clearTimeout(chaosTimer);
+  launchConfetti();
+  playVictoryFanfare();
+
+  var elapsed = Math.floor((Date.now() - startTime) / 1000);
+  var mins = Math.floor(elapsed / 60);
+  var secs = elapsed % 60;
+  var timeStr = mins + ':' + secs.toString().padStart(2, '0');
+
+  document.getElementById('end-title').textContent = 'All Clips Shipped';
+  document.getElementById('end-title').style.color = '#a855f7';
+  document.getElementById('end-subtitle').textContent = 'You shipped ' + linesCleared + ' clips in ' + timeStr + '. No revisions. No render times. No Premiere crashes. Your competitor is still editing their first clip.';
+
+  var scoreEl = document.getElementById('end-score');
+  var linesEl = document.getElementById('end-lines');
+  var timeEl = document.getElementById('end-time');
+  scoreEl.textContent = score.toLocaleString();
+  scoreEl.style.color = '#a855f7';
+  linesEl.textContent = linesCleared;
+  linesEl.style.color = '#a855f7';
+  timeEl.textContent = timeStr;
+  timeEl.style.color = '#a855f7';
+
+  // Build buttons
+  var btnsEl = document.getElementById('end-buttons');
+  while (btnsEl.firstChild) btnsEl.removeChild(btnsEl.firstChild);
+
+  var demoBtn = document.createElement('a');
+  demoBtn.className = 'end-btn primary';
+  demoBtn.href = 'https://www.opus.pro/contact';
+  demoBtn.target = '_blank';
+  demoBtn.textContent = 'Book a Demo';
+
+  var replayBtn = document.createElement('button');
+  replayBtn.className = 'end-btn secondary';
+  replayBtn.textContent = 'Play Again';
+  replayBtn.onclick = backToMenu;
+
+  btnsEl.appendChild(demoBtn);
+  btnsEl.appendChild(replayBtn);
+
+  document.getElementById('end-screen').style.display = 'flex';
+}
+
+function triggerLoss() {
+  isGameOver = true;
+  stopMusic();
+  if (chaosTimer) clearTimeout(chaosTimer);
+  if (urgencyInterval) clearInterval(urgencyInterval);
+  if (gameLoop) cancelAnimationFrame(gameLoop);
+
+  var elapsed = Math.floor((Date.now() - startTime) / 1000);
+  var mins = Math.floor(elapsed / 60);
+  var secs = elapsed % 60;
+  var timeStr = mins + ':' + secs.toString().padStart(2, '0');
+
+  document.getElementById('end-title').textContent = 'Content Backlog: Full';
+  document.getElementById('end-title').style.color = '#ff6666';
+
+  var lossMsg = 'You shipped ' + linesCleared + ' clips before drowning in raw footage. The average team spends 1.5\u20133 hours per clip in Premiere.';
+  if (!opusPurchased) {
+    lossMsg += ' There was a button that could have saved you.';
+  }
+  document.getElementById('end-subtitle').textContent = lossMsg;
+
+  var scoreEl = document.getElementById('end-score');
+  var linesEl = document.getElementById('end-lines');
+  var timeEl = document.getElementById('end-time');
+  scoreEl.textContent = score.toLocaleString();
+  scoreEl.style.color = '#ff6666';
+  linesEl.textContent = linesCleared;
+  linesEl.style.color = '#ff6666';
+  timeEl.textContent = timeStr;
+  timeEl.style.color = '#ff6666';
+
+  var btnsEl = document.getElementById('end-buttons');
+  while (btnsEl.firstChild) btnsEl.removeChild(btnsEl.firstChild);
+
+  var demoBtn = document.createElement('a');
+  demoBtn.className = 'end-btn primary';
+  demoBtn.href = 'https://www.opus.pro/contact';
+  demoBtn.target = '_blank';
+  demoBtn.textContent = 'Try OpusClip for Real';
+
+  var replayBtn = document.createElement('button');
+  replayBtn.className = 'end-btn secondary';
+  replayBtn.textContent = 'Play Again';
+  replayBtn.onclick = backToMenu;
+
+  btnsEl.appendChild(demoBtn);
+  btnsEl.appendChild(replayBtn);
+
+  document.getElementById('end-screen').style.display = 'flex';
+}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+
+function launchConfetti() {
+  var container = document.getElementById('confetti-container');
+  var colors = ['#6722FF', '#A855F7', '#7C3AED', '#9333EA', '#fff', '#ffd700', '#ff6b6b', '#48dbfb'];
+
+  // Wave 1: big burst
+  spawnConfettiBatch(container, colors, 120, 0);
+  // Wave 2: delayed burst
+  setTimeout(function() { spawnConfettiBatch(container, colors, 80, 0); }, 800);
+  // Wave 3: final burst
+  setTimeout(function() { spawnConfettiBatch(container, colors, 60, 0); }, 1800);
+
+  // Clean up after all waves
+  setTimeout(function() {
+    while (container.firstChild) container.removeChild(container.firstChild);
+  }, 8000);
+}
+
+function spawnConfettiBatch(container, colors, count, baseDelay) {
+  for (var i = 0; i < count; i++) {
+    var piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = (Math.random() * 100) + '%';
+    piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    var size = 5 + Math.random() * 12;
+    piece.style.width = size + 'px';
+    piece.style.height = size + 'px';
+    piece.style.borderRadius = Math.random() > 0.4 ? '50%' : (Math.random() > 0.5 ? '2px' : '0');
+    piece.style.animationDuration = (1.5 + Math.random() * 4) + 's';
+    piece.style.animationDelay = (baseDelay + Math.random() * 0.8) + 's';
+    // Some spin faster
+    if (Math.random() > 0.7) {
+      piece.style.animationName = 'confetti-fall-spin';
+    }
+    container.appendChild(piece);
+  }
+}
+
+// Victory fanfare — triumphant 8-bit jingle
+function playVictoryFanfare() {
+  if (!audioCtx || isMuted) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  var now = audioCtx.currentTime + 0.05;
+  var bpm = 180;
+  var beat = 60 / bpm;
+
+  // Fanfare melody: triumphant ascending phrase
+  var fanfare = [
+    // da-da-da-DAAA (rising)
+    { f: 523, t: 0, d: beat * 0.4 },            // C5
+    { f: 659, t: beat * 0.5, d: beat * 0.4 },    // E5
+    { f: 784, t: beat * 1.0, d: beat * 0.4 },    // G5
+    { f: 1047, t: beat * 1.5, d: beat * 1.2 },   // C6 (hold!)
+
+    // second phrase — higher
+    { f: 784, t: beat * 3.0, d: beat * 0.3 },    // G5
+    { f: 880, t: beat * 3.4, d: beat * 0.3 },    // A5
+    { f: 988, t: beat * 3.8, d: beat * 0.3 },    // B5
+    { f: 1175, t: beat * 4.2, d: beat * 0.3 },   // D6
+    { f: 1319, t: beat * 4.6, d: beat * 1.5 },   // E6 (big hold!)
+
+    // final chord arpeggio
+    { f: 1047, t: beat * 6.5, d: beat * 0.2 },   // C6
+    { f: 1319, t: beat * 6.8, d: beat * 0.2 },   // E6
+    { f: 1568, t: beat * 7.1, d: beat * 2.0 },   // G6 (triumph!)
+  ];
+
+  // Bass hits
+  var bass = [
+    { f: 131, t: 0, d: beat * 1.5 },
+    { f: 165, t: beat * 1.5, d: beat * 1.5 },
+    { f: 131, t: beat * 3.0, d: beat * 1.5 },
+    { f: 196, t: beat * 4.5, d: beat * 2.0 },
+    { f: 131, t: beat * 6.5, d: beat * 3.0 },
+  ];
+
+  // Play melody
+  for (var i = 0; i < fanfare.length; i++) {
+    var n = fanfare[i];
+    playNote(n.f, n.d, now + n.t, 'triangle', 0.2);
+    // Add warm harmony an octave down
+    playNote(n.f / 2, n.d, now + n.t, 'sine', 0.12);
+  }
+
+  // Play bass
+  for (var i = 0; i < bass.length; i++) {
+    var b = bass[i];
+    playNote(b.f, b.d, now + b.t, 'sine', 0.22);
+  }
+
+  // Drum fills
+  var drumHits = [0, 0.5, 1.0, 1.5, 3.0, 3.4, 3.8, 4.2, 4.6, 6.5, 6.8, 7.1];
+  for (var i = 0; i < drumHits.length; i++) {
+    playNote(55, beat * 0.3, now + drumHits[i] * beat, 'sine', 0.2);
+    playNoise(now + drumHits[i] * beat, beat * 0.15);
+  }
+
+  // Rapid snare roll before final note
+  for (var j = 0; j < 8; j++) {
+    playNoise(now + (6.0 + j * 0.06) * beat, 0.05);
+  }
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Dot grid instead of lines
+  ctx.fillStyle = opusMode ? '#1e1e30' : '#1a1a24';
+  for (var r = 0; r <= ROWS; r++)
+    for (var c = 0; c <= COLS; c++) {
+      ctx.beginPath();
+      ctx.arc(c * BLOCK, r * BLOCK, 1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+  for (var r = 0; r < ROWS; r++)
+    for (var c = 0; c < COLS; c++)
+      if (board[r][c]) drawBlock(ctx, c, r, board[r][c]);
+
+  if (!currentPiece || isGameOver) return;
+
+  // Ghost
+  var gy = currentPiece.y;
+  while (valid(currentPiece.shape, currentPiece.x, gy + 1)) gy++;
+  ctx.globalAlpha = 0.2;
+  for (var r = 0; r < currentPiece.shape.length; r++)
+    for (var c = 0; c < currentPiece.shape[r].length; c++) {
+      if (!currentPiece.shape[r][c]) continue;
+      var gx = (currentPiece.x + c) * BLOCK + 2, gby = (gy + r) * BLOCK + 2;
+      var gs = BLOCK - 4, gr = 6;
+      ctx.strokeStyle = currentPiece.color;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(gx + gr, gby);
+      ctx.lineTo(gx + gs - gr, gby);
+      ctx.quadraticCurveTo(gx + gs, gby, gx + gs, gby + gr);
+      ctx.lineTo(gx + gs, gby + gs - gr);
+      ctx.quadraticCurveTo(gx + gs, gby + gs, gx + gs - gr, gby + gs);
+      ctx.lineTo(gx + gr, gby + gs);
+      ctx.quadraticCurveTo(gx, gby + gs, gx, gby + gs - gr);
+      ctx.lineTo(gx, gby + gr);
+      ctx.quadraticCurveTo(gx, gby, gx + gr, gby);
+      ctx.closePath();
+      ctx.stroke();
+    }
+  ctx.globalAlpha = 1;
+
+  // Current piece
+  for (var r = 0; r < currentPiece.shape.length; r++)
+    for (var c = 0; c < currentPiece.shape[r].length; c++) {
+      if (!currentPiece.shape[r][c]) continue;
+      drawBlock(ctx, currentPiece.x + c, currentPiece.y + r, currentPiece.color);
+    }
+
+  drawNextPreview();
+}
+
+function drawBlock(context, x, y, color) {
+  var bx = x * BLOCK + 2, by = y * BLOCK + 2;
+  var size = BLOCK - 4;
+  var radius = 6;
+  // Rounded rectangle
+  context.fillStyle = color;
+  context.beginPath();
+  context.moveTo(bx + radius, by);
+  context.lineTo(bx + size - radius, by);
+  context.quadraticCurveTo(bx + size, by, bx + size, by + radius);
+  context.lineTo(bx + size, by + size - radius);
+  context.quadraticCurveTo(bx + size, by + size, bx + size - radius, by + size);
+  context.lineTo(bx + radius, by + size);
+  context.quadraticCurveTo(bx, by + size, bx, by + size - radius);
+  context.lineTo(bx, by + radius);
+  context.quadraticCurveTo(bx, by, bx + radius, by);
+  context.closePath();
+  context.fill();
+  // Subtle highlight
+  context.fillStyle = 'rgba(255,255,255,0.10)';
+  context.fillRect(bx + 3, by + 2, size - 6, 3);
+}
+
+function drawNextPreview() {
+  nextCtx.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
+  if (!nextPiece) return;
+  var s = nextPiece.shape;
+  var cellSize = Math.min(18, Math.floor((nextCanvas.width - 10) / Math.max(s[0].length, 1)));
+  var ox = (nextCanvas.width - s[0].length * cellSize) / 2;
+  var oy = (nextCanvas.height - s.length * cellSize) / 2;
+
+  for (var r = 0; r < s.length; r++)
+    for (var c = 0; c < s[r].length; c++) {
+      if (!s[r][c]) continue;
+      var nx = ox + c * cellSize + 1, ny = oy + r * cellSize + 1;
+      var ns = cellSize - 2, nr = 3;
+      nextCtx.fillStyle = nextPiece.color;
+      nextCtx.beginPath();
+      nextCtx.moveTo(nx + nr, ny);
+      nextCtx.lineTo(nx + ns - nr, ny);
+      nextCtx.quadraticCurveTo(nx + ns, ny, nx + ns, ny + nr);
+      nextCtx.lineTo(nx + ns, ny + ns - nr);
+      nextCtx.quadraticCurveTo(nx + ns, ny + ns, nx + ns - nr, ny + ns);
+      nextCtx.lineTo(nx + nr, ny + ns);
+      nextCtx.quadraticCurveTo(nx, ny + ns, nx, ny + ns - nr);
+      nextCtx.lineTo(nx, ny + nr);
+      nextCtx.quadraticCurveTo(nx, ny, nx + nr, ny);
+      nextCtx.closePath();
+      nextCtx.fill();
+    }
+
+  document.getElementById('current-label').textContent = nextPiece.label;
+  document.getElementById('current-label').style.color = opusMode ? '#a855f7' : '#ff6666';
+}
+
+// ============================================================
+// GAME LOOP
+// ============================================================
+
+function update(timestamp) {
+  if (isGameOver) return;
+  if (timestamp - lastDrop > dropInterval) {
+    moveDown();
+    lastDrop = timestamp;
+  }
+  draw();
+  gameLoop = requestAnimationFrame(update);
+}
+
+function moveDown() {
+  if (valid(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
+    currentPiece.y++;
+  } else {
+    lockPiece();
+  }
+}
+
+function lockPiece() {
+  merge(currentPiece);
+  var cleared = clearFullLines();
+
+  if (cleared > 0) {
+    var points = [0, 100, 300, 500, 800][Math.min(cleared, 4)];
+    var mult = opusMode ? 3 : 1;
+    score += points * mult;
+    linesCleared += cleared;
+
+    if (opusMode) {
+      showSideToast(CLEAR_MESSAGES[Math.floor(Math.random() * CLEAR_MESSAGES.length)], 'clear', 1200);
+    }
+
+    if (opusMode) {
+      updateOpusSpeed();
+    } else {
+      dropInterval = Math.max(200, dropInterval - 8);
+    }
+  }
+
+  updateUI();
+
+  if (checkWin()) { triggerWin(); return; }
+
+  currentPiece = nextPiece;
+  nextPiece = randomPiece();
+
+  if (!valid(currentPiece.shape, currentPiece.x, currentPiece.y)) {
+    triggerLoss();
+  }
+}
+
+function hardDrop() {
+  while (valid(currentPiece.shape, currentPiece.x, currentPiece.y + 1)) {
+    currentPiece.y++;
+    score += (opusMode ? 4 : 2);
+  }
+  lockPiece();
+}
+
+function updateUI() {
+  document.getElementById('score-display').textContent = score.toLocaleString();
+  document.getElementById('lines-display').textContent = linesCleared;
+}
+
+// ============================================================
+// CONTROLS
+// ============================================================
+
+function handleKey(e) {
+  if (isGameOver || !currentPiece) return;
+  switch (e.key) {
+    case 'ArrowLeft':
+      if (valid(currentPiece.shape, currentPiece.x - 1, currentPiece.y)) currentPiece.x--;
+      break;
+    case 'ArrowRight':
+      if (valid(currentPiece.shape, currentPiece.x + 1, currentPiece.y)) currentPiece.x++;
+      break;
+    case 'ArrowDown':
+      moveDown(); score += 1; updateUI();
+      break;
+    case 'ArrowUp': {
+      var rot = rotate(currentPiece.shape);
+      if (valid(rot, currentPiece.x, currentPiece.y)) {
+        currentPiece.shape = rot;
+      } else {
+        var kicks = [-1, 1, -2, 2];
+        for (var i = 0; i < kicks.length; i++) {
+          if (valid(rot, currentPiece.x + kicks[i], currentPiece.y)) {
+            currentPiece.shape = rot;
+            currentPiece.x += kicks[i];
+            break;
+          }
+        }
+      }
+      break;
+    }
+    case ' ':
+      e.preventDefault();
+      hardDrop();
+      break;
+  }
+}
+
+function handleTouch(action) {
+  if (isGameOver || !currentPiece) return;
+  switch (action) {
+    case 'left': if (valid(currentPiece.shape, currentPiece.x - 1, currentPiece.y)) currentPiece.x--; break;
+    case 'right': if (valid(currentPiece.shape, currentPiece.x + 1, currentPiece.y)) currentPiece.x++; break;
+    case 'down': moveDown(); break;
+    case 'rotate': var rot = rotate(currentPiece.shape); if (valid(rot, currentPiece.x, currentPiece.y)) currentPiece.shape = rot; break;
+    case 'drop': hardDrop(); break;
+  }
+}
+
+// ============================================================
+// GAME LIFECYCLE
+// ============================================================
+
+function startGame() {
+  opusMode = false;
+  opusPurchased = false;
+  isGameOver = false;
+  score = 0;
+  linesCleared = 0;
+  chaosCount = 0;
+  dropInterval = 550;
+  lastDrop = 0;
+  startTime = Date.now();
+
+  board = createBoard();
+  currentPiece = randomPiece();
+  nextPiece = randomPiece();
+
+  // UI reset
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'flex';
+  document.getElementById('end-screen').style.display = 'none';
+  document.getElementById('buy-opus-box').style.display = 'none';
+  document.getElementById('opus-toggle-box').style.display = 'none';
+  document.getElementById('game-canvas').classList.remove('opus-border');
+
+  // Clear old toasts
+  var col = document.getElementById('toast-column');
+  while (col.firstChild) col.removeChild(col.firstChild);
+
+  var badge = document.getElementById('mode-badge');
+  badge.textContent = 'Premiere Pro';
+  badge.className = 'game-mode-badge hard';
+  document.getElementById('score-display').style.color = '#ff6666';
+  document.getElementById('lines-display').style.color = '#ff6666';
+
+  // Reset toggle state
+  var toggle = document.getElementById('opus-toggle');
+  toggle.classList.remove('off');
+
+  updateUI();
+
+  canvas = document.getElementById('game-canvas');
+  ctx = canvas.getContext('2d');
+  nextCanvas = document.getElementById('next-piece-canvas');
+  nextCtx = nextCanvas.getContext('2d');
+
+  document.removeEventListener('keydown', handleKey);
+  document.addEventListener('keydown', handleKey);
+
+  if (chaosTimer) clearTimeout(chaosTimer);
+  if (buyBtnTimer) clearTimeout(buyBtnTimer);
+  if (urgencyInterval) clearInterval(urgencyInterval);
+  if (gameLoop) cancelAnimationFrame(gameLoop);
+
+  // Chaos starts at 8s — let them feel the editing pain first
+  chaosTimer = setTimeout(triggerChaos, 8000);
+
+  // Buy button at 15s — after they've felt some pain
+  buyBtnTimer = setTimeout(showBuyButton, 15000);
+
+  startMusic();
+  gameLoop = requestAnimationFrame(update);
+}
+
+function backToMenu() {
+  stopMusic();
+  isGameOver = true;
+  if (chaosTimer) clearTimeout(chaosTimer);
+  if (buyBtnTimer) clearTimeout(buyBtnTimer);
+  if (urgencyInterval) clearInterval(urgencyInterval);
+  if (gameLoop) cancelAnimationFrame(gameLoop);
+  document.getElementById('game-screen').style.display = 'none';
+  document.getElementById('end-screen').style.display = 'none';
+  document.getElementById('start-screen').style.display = 'flex';
+  var cc = document.getElementById('confetti-container');
+  while (cc.firstChild) cc.removeChild(cc.firstChild);
+}
+
+window.addEventListener('keydown', function(e) {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].indexOf(e.key) !== -1) {
+    e.preventDefault();
+  }
+});
+</script>
+
+</body>
+</html>
